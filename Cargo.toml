@@ -13,6 +13,8 @@ members = [
     "examples/simple",
     "examples/with_winit",
 
+    "bindings/vello_ffi",
+
     "sparse_strips/vello_api",
     "sparse_strips/vello_bench",
     "sparse_strips/vello_common",

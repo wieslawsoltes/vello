@@ -1,0 +1,42 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "bindings", "bindings", "{D683BF3D-D126-42E8-A222-A84F83186095}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "dotnet", "dotnet", "{A98B7F18-ED53-EBCD-09F7-717690A67F95}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VelloSharp", "bindings\dotnet\VelloSharp\VelloSharp.csproj", "{5B7061EA-FC15-770D-7D6F-8423F2C07CBF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{F6CD3980-8796-2140-7275-F32DCF314D60}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AvaloniaVelloDemo", "bindings\dotnet\samples\AvaloniaVelloDemo\AvaloniaVelloDemo.csproj", "{5BF2B1B3-D643-31FF-1FE8-409831215450}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5B7061EA-FC15-770D-7D6F-8423F2C07CBF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5B7061EA-FC15-770D-7D6F-8423F2C07CBF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5B7061EA-FC15-770D-7D6F-8423F2C07CBF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5B7061EA-FC15-770D-7D6F-8423F2C07CBF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5BF2B1B3-D643-31FF-1FE8-409831215450}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5BF2B1B3-D643-31FF-1FE8-409831215450}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5BF2B1B3-D643-31FF-1FE8-409831215450}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5BF2B1B3-D643-31FF-1FE8-409831215450}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{A98B7F18-ED53-EBCD-09F7-717690A67F95} = {D683BF3D-D126-42E8-A222-A84F83186095}
+		{5B7061EA-FC15-770D-7D6F-8423F2C07CBF} = {A98B7F18-ED53-EBCD-09F7-717690A67F95}
+		{F6CD3980-8796-2140-7275-F32DCF314D60} = {A98B7F18-ED53-EBCD-09F7-717690A67F95}
+		{5BF2B1B3-D643-31FF-1FE8-409831215450} = {F6CD3980-8796-2140-7275-F32DCF314D60}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {9D5029E4-4693-4388-9E15-433D9159BF8E}
+	EndGlobalSection
+EndGlobal
