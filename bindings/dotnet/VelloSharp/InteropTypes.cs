@@ -50,6 +50,12 @@ internal enum VelloAaMode : int
     Msaa16 = 2,
 }
 
+internal enum VelloRenderFormat : int
+{
+    Rgba8 = 0,
+    Bgra8 = 1,
+}
+
 [StructLayout(LayoutKind.Sequential)]
 internal struct VelloPoint
 {
@@ -110,4 +116,5 @@ internal struct VelloRenderParams
     public uint Height;
     public VelloColor BaseColor;
     public VelloAaMode Antialiasing;
+    public VelloRenderFormat Format;
 }

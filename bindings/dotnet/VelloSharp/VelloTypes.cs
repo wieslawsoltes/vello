@@ -27,6 +27,12 @@ public enum AntialiasingMode
     Msaa16 = VelloAaMode.Msaa16,
 }
 
+public enum RenderFormat
+{
+    Rgba8 = VelloRenderFormat.Rgba8,
+    Bgra8 = VelloRenderFormat.Bgra8,
+}
+
 public readonly record struct RgbaColor(float R, float G, float B, float A)
 {
     public static RgbaColor FromBytes(byte r, byte g, byte b, byte a = 255)
@@ -51,10 +57,12 @@ public readonly record struct RenderParams(
     uint Width,
     uint Height,
     RgbaColor BaseColor,
-    AntialiasingMode Antialiasing = AntialiasingMode.Msaa8)
+    AntialiasingMode Antialiasing = AntialiasingMode.Msaa8,
+    RenderFormat Format = RenderFormat.Rgba8)
 {
     public uint Width { get; init; } = Width;
     public uint Height { get; init; } = Height;
     public RgbaColor BaseColor { get; init; } = BaseColor;
     public AntialiasingMode Antialiasing { get; init; } = Antialiasing;
+    public RenderFormat Format { get; init; } = Format;
 }

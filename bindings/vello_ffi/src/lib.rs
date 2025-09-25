@@ -15,6 +15,18 @@ use peniko::{Color, Fill};
 use vello::{AaConfig, RenderParams, Renderer, RendererOptions, Scene};
 use wgpu::{Buffer, Device, Queue};
 
+#[cfg(feature = "trace-paths")]
+macro_rules! trace_path {
+    ($($arg:tt)*) => {
+        println!($($arg)*);
+    };
+}
+
+#[cfg(not(feature = "trace-paths"))]
+macro_rules! trace_path {
+    ($($arg:tt)*) => {};
+}
+
 #[repr(i32)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum VelloStatus {
@@ -130,7 +142,7 @@ fn build_bez_path(elements: &[VelloPathElement]) -> Result<BezPath, &'static str
     let mut has_move = false;
     for (idx, elem) in elements.iter().enumerate() {
         if idx == 0 {
-            println!(
+            trace_path!(
                 "native first verb raw={:?} ({}), bytes={:02X?}",
                 elem.verb,
                 elem.verb as i32,
@@ -158,11 +170,7 @@ fn build_bez_path(elements: &[VelloPathElement]) -> Result<BezPath, &'static str
                 if !has_move {
                     return Err("path must start with MoveTo");
                 }
-                path.curve_to(
-                    (elem.x0, elem.y0),
-                    (elem.x1, elem.y1),
-                    (elem.x2, elem.y2),
-                );
+                path.curve_to((elem.x0, elem.y0), (elem.x1, elem.y1), (elem.x2, elem.y2));
             }
             VelloPathVerb::Close => {
                 if idx == 0 {
@@ -253,6 +261,13 @@ pub enum VelloAaMode {
     Msaa16 = 2,
 }
 
+#[repr(i32)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum VelloRenderFormat {
+    Rgba8 = 0,
+    Bgra8 = 1,
+}
+
 impl From<VelloAaMode> for AaConfig {
     fn from(value: VelloAaMode) -> Self {
         match value {
@@ -270,6 +285,7 @@ pub struct VelloRenderParams {
     pub height: u32,
     pub base_color: VelloColor,
     pub antialiasing: VelloAaMode,
+    pub format: VelloRenderFormat,
 }
 
 struct RenderTarget {
@@ -448,12 +464,29 @@ impl RendererContext {
         let mapped = buffer_slice.get_mapped_range();
         let output = unsafe { slice::from_raw_parts_mut(out_ptr, out_size) };
         let row_size = self.target.unpadded_bytes_per_row;
+        if row_size % 4 != 0 {
+            self.target.readback.unmap();
+            return Err(VelloStatus::Unsupported);
+        }
         let padded = self.target.padded_bytes_per_row;
         for y in 0..params.height as usize {
             let src_offset = y * padded;
             let dst_offset = y * out_stride;
             let src = &mapped[src_offset..src_offset + row_size];
-            output[dst_offset..dst_offset + row_size].copy_from_slice(src);
+            let dst = &mut output[dst_offset..dst_offset + row_size];
+            match params.format {
+                VelloRenderFormat::Rgba8 => {
+                    dst.copy_from_slice(src);
+                }
+                VelloRenderFormat::Bgra8 => {
+                    for (rgba, bgra) in src.chunks_exact(4).zip(dst.chunks_exact_mut(4)) {
+                        bgra[0] = rgba[2];
+                        bgra[1] = rgba[1];
+                        bgra[2] = rgba[0];
+                        bgra[3] = rgba[3];
+                    }
+                }
+            }
         }
         drop(mapped);
         self.target.readback.unmap();

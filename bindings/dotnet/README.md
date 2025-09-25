@@ -52,12 +52,15 @@ scene.FillPath(path, FillRule.NonZero, Matrix3x2.Identity, RgbaColor.FromBytes(0
 var buffer = new byte[1024 * 768 * 4];
 renderer.Render(
     scene,
-    new RenderParams(1024, 768, RgbaColor.FromBytes(0x10, 0x10, 0x12)),
+    new RenderParams(1024, 768, RgbaColor.FromBytes(0x10, 0x10, 0x12))
+    {
+        Format = RenderFormat.Bgra8,
+    },
     buffer,
     strideBytes: 1024 * 4);
 ```
 
-`buffer` now contains BGRA pixels ready for presentation via SkiaSharp, Avalonia or any other API.
+`buffer` now contains BGRA pixels ready for presentation via SkiaSharp, Avalonia or any other API; omit the assignment to `Format` to receive RGBA output instead.
 
 ## Avalonia integration
 

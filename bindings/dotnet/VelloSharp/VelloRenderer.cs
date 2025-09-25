@@ -52,6 +52,7 @@ public sealed class Renderer : IDisposable
             Height = renderParams.Height,
             BaseColor = ToColor(renderParams.BaseColor),
             Antialiasing = (VelloAaMode)renderParams.Antialiasing,
+            Format = (VelloRenderFormat)renderParams.Format,
         };
 
         var bufferSize = (nuint)destination.Length;

@@ -67,7 +67,10 @@ public sealed class VelloView : Control, IDisposable
                 (uint)width,
                 (uint)height,
                 RgbaColor.FromBytes(18, 18, 20),
-                AntialiasingMode.Msaa8);
+                AntialiasingMode.Msaa8)
+            {
+                Format = RenderFormat.Bgra8,
+            };
             _renderer.Render(_scene, parameters, span, frame.RowBytes);
         }
 
@@ -183,7 +186,7 @@ public sealed class VelloView : Control, IDisposable
         _bitmap = new WriteableBitmap(
             new PixelSize(width, height),
             new Vector(dpi, dpi),
-            PixelFormat.Rgba8888,
+            PixelFormat.Bgra8888,
             AlphaFormat.Premul);
         _renderer.Resize((uint)width, (uint)height);
     }
