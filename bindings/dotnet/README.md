@@ -62,6 +62,32 @@ renderer.Render(
 
 `buffer` now contains BGRA pixels ready for presentation via SkiaSharp, Avalonia or any other API; omit the assignment to `Format` to receive RGBA output instead.
 
+## Brushes and Layers
+
+`Scene.FillPath` and `Scene.StrokePath` accept the `Brush` hierarchy, enabling linear/radial gradients and image brushes in addition to solid colors. Example:
+
+```csharp
+var brush = new LinearGradientBrush(
+    start: new Vector2(0, 0),
+    end: new Vector2(256, 0),
+    stops: new[]
+    {
+        new GradientStop(0f, RgbaColor.FromBytes(255, 0, 128)),
+        new GradientStop(1f, RgbaColor.FromBytes(0, 128, 255)),
+    });
+scene.FillPath(path, FillRule.NonZero, Matrix3x2.Identity, brush);
+```
+
+Layer management is accessible through `Scene.PushLayer`, `Scene.PushLuminanceMaskLayer`, and `Scene.PopLayer`, giving full control over blend modes and clip groups.
+
+## Images and Glyphs
+
+Use `Image.FromPixels` and `Scene.DrawImage` to render textures directly. Glyph runs can be issued via `Scene.DrawGlyphRun`, which takes a `Font`, a glyph span, and `GlyphRunOptions` for fill or stroke rendering.
+
+## Renderer Options
+
+`Renderer` exposes an optional `RendererOptions` argument to select CPU-only rendering or limit the available anti-aliasing pipelines at creation time.
+
 ## Avalonia integration
 
 The `VelloView` control in the sample project demonstrates how to render directly into an

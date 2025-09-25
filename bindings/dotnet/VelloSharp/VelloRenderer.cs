@@ -7,12 +7,14 @@ public sealed class Renderer : IDisposable
 {
     private IntPtr _handle;
 
-    public Renderer(uint width, uint height)
+    public Renderer(uint width, uint height, RendererOptions? options = null)
     {
-        _handle = NativeMethods.vello_renderer_create(width, height);
+        _handle = options.HasValue
+            ? NativeMethods.vello_renderer_create_with_options(width, height, options.Value.ToNative())
+            : NativeMethods.vello_renderer_create(width, height);
         if (_handle == IntPtr.Zero)
         {
-            throw new InvalidOperationException("Failed to create Vello renderer.");
+            throw new InvalidOperationException(NativeHelpers.GetLastErrorMessage() ?? "Failed to create Vello renderer.");
         }
     }
 
@@ -50,7 +52,7 @@ public sealed class Renderer : IDisposable
         {
             Width = renderParams.Width,
             Height = renderParams.Height,
-            BaseColor = ToColor(renderParams.BaseColor),
+            BaseColor = renderParams.BaseColor.ToNative(),
             Antialiasing = (VelloAaMode)renderParams.Antialiasing,
             Format = (VelloRenderFormat)renderParams.Format,
         };
@@ -93,14 +95,6 @@ public sealed class Renderer : IDisposable
             NativeMethods.vello_renderer_destroy(_handle);
         }
     }
-
-    private static VelloColor ToColor(RgbaColor color) => new()
-    {
-        R = color.R,
-        G = color.G,
-        B = color.B,
-        A = color.A,
-    };
 
     private void ThrowIfDisposed()
     {

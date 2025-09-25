@@ -11,10 +11,10 @@ This document captures the current state of the .NET bindings for Vello and the 
 ## Completed
 
 - **Hardened the FFI layer:** removed unconditional diagnostics, tightened the readback pipeline (single map/unmap per frame with correct texture usages), added RGBA/BGRA selection, and exposed feature flags so the Rust crate can be redistributed cleanly.
+- **Exposed additional scene/renderer functionality:** layers, gradient/image brushes, blurred rectangles, glyph runs, renderer options, fonts, and image helpers are now available via the FFI and .NET wrappers.
 
 ## Completion Plan
 
-- **Expose missing scene/renderer surface area:** add externs and C# wrappers for layer stack management, gradients/brushes, images, glyph runs, blurred rectangles, stroke options, and renderer options (AA support, CPU fallback) so the .NET API covers Vello’s primitives.
 - **Create safe C# abstractions:** manage resource lifetimes via `IDisposable`, introduce immutable structs for colors/gradients, provide span-friendly glyph/path builders, and ensure argument validation/error propagation through `NativeHelpers`.
 - **Automate native loading:** implement a `DllImport` resolver and RID-specific binary distribution so `dotnet build` produces and copies the correct `libvello_ffi` without manual intervention.
 - **Add integration helpers:** supply an Avalonia control owning the renderer, a SkiaSharp `SKBitmap`/`SKSurface` bridge, and CPU/GPU render paths with stride/format negotiation.
