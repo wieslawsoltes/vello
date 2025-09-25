@@ -5,7 +5,7 @@ namespace VelloSharp;
 
 internal static class NativeMethods
 {
-    private const string LibraryName = "vello_ffi";
+    internal const string LibraryName = "vello_ffi";
 
     [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
     internal static extern IntPtr vello_renderer_create(uint width, uint height);

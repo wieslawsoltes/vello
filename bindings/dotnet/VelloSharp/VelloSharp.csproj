@@ -5,5 +5,121 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
+    <VelloRuntimeIdentifier>$(RuntimeIdentifier)</VelloRuntimeIdentifier>
+    <VelloRepositoryRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\..\..'))</VelloRepositoryRoot>
   </PropertyGroup>
+
+  <UsingTask TaskName="GetCurrentRid"
+             TaskFactory="RoslynCodeTaskFactory"
+             AssemblyName="Microsoft.Build.Tasks.Core">
+    <ParameterGroup>
+      <RuntimeIdentifier ParameterType="System.String" Output="true" />
+    </ParameterGroup>
+    <Task>
+      <Code Type="Fragment" Language="cs"><![CDATA[
+var info = new System.Diagnostics.ProcessStartInfo("dotnet", "--info")
+{
+    RedirectStandardOutput = true,
+    RedirectStandardError = true,
+    UseShellExecute = false,
+    CreateNoWindow = true,
+};
+
+using var process = System.Diagnostics.Process.Start(info);
+if (process is null)
+{
+    throw new System.InvalidOperationException("Failed to start 'dotnet --info'.");
+}
+
+var output = process.StandardOutput.ReadToEnd();
+process.WaitForExit();
+
+var rid = string.Empty;
+using (var reader = new System.IO.StringReader(output))
+{
+    string line;
+    while ((line = reader.ReadLine()) is not null)
+    {
+        line = line.Trim();
+        if (line.StartsWith("RID:", System.StringComparison.OrdinalIgnoreCase))
+        {
+            var colon = line.IndexOf(':');
+            if (colon >= 0 && colon + 1 < line.Length)
+            {
+                rid = line.Substring(colon + 1).Trim();
+            }
+            break;
+        }
+    }
+}
+
+RuntimeIdentifier = rid;
+]]></Code>
+    </Task>
+  </UsingTask>
+
+  <Target Name="EnsureVelloRuntimeIdentifier"
+          BeforeTargets="Build"
+          Condition="'$(DesignTimeBuild)' != 'true'">
+    <PropertyGroup>
+      <VelloRuntimeIdentifier Condition="'$(VelloRuntimeIdentifier)'=='' and '$(RuntimeIdentifier)'!=''">$(RuntimeIdentifier)</VelloRuntimeIdentifier>
+      <VelloRuntimeIdentifier Condition="'$(VelloRuntimeIdentifier)'=='' and '$(ResolvedCurrentRuntimeIdentifier)'!=''">$(ResolvedCurrentRuntimeIdentifier)</VelloRuntimeIdentifier>
+      <VelloRuntimeIdentifier Condition="'$(VelloRuntimeIdentifier)'=='' and '$(MSBuildRuntimeIdentifier)'!=''">$(MSBuildRuntimeIdentifier)</VelloRuntimeIdentifier>
+    </PropertyGroup>
+    <GetCurrentRid Condition="'$(VelloRuntimeIdentifier)'==''">
+      <Output TaskParameter="RuntimeIdentifier" PropertyName="VelloRuntimeIdentifier" />
+    </GetCurrentRid>
+    <PropertyGroup>
+      <VelloRuntimeIdentifier Condition="'$(VelloRuntimeIdentifier)'==''">unknown</VelloRuntimeIdentifier>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="BuildVelloNativeLibrary"
+          DependsOnTargets="EnsureVelloRuntimeIdentifier"
+          BeforeTargets="Build"
+          Condition="'$(DesignTimeBuild)' != 'true' and '$(VelloRuntimeIdentifier)' != 'unknown'">
+    <PropertyGroup>
+      <_VelloNativeFileName Condition="'$(VelloRuntimeIdentifier)' == 'win-x64' or '$(VelloRuntimeIdentifier)' == 'win-arm64' or '$(VelloRuntimeIdentifier)' == 'win'">vello_ffi.dll</_VelloNativeFileName>
+      <_VelloNativeFileName Condition="'$(VelloRuntimeIdentifier)' == 'osx-x64' or '$(VelloRuntimeIdentifier)' == 'osx-arm64' or '$(VelloRuntimeIdentifier)' == 'osx'">libvello_ffi.dylib</_VelloNativeFileName>
+      <_VelloNativeFileName Condition="'$(VelloRuntimeIdentifier)' == 'linux-x64' or '$(VelloRuntimeIdentifier)' == 'linux-arm64' or '$(VelloRuntimeIdentifier)' == 'linux'">libvello_ffi.so</_VelloNativeFileName>
+      <_VelloNativeFileName Condition="'$(_VelloNativeFileName)'==''">libvello_ffi.so</_VelloNativeFileName>
+
+      <_VelloRustTarget Condition="'$(VelloRuntimeIdentifier)' == 'win-x64'">x86_64-pc-windows-msvc</_VelloRustTarget>
+      <_VelloRustTarget Condition="'$(VelloRuntimeIdentifier)' == 'win-arm64'">aarch64-pc-windows-msvc</_VelloRustTarget>
+      <_VelloRustTarget Condition="'$(VelloRuntimeIdentifier)' == 'osx-x64'">x86_64-apple-darwin</_VelloRustTarget>
+      <_VelloRustTarget Condition="'$(VelloRuntimeIdentifier)' == 'osx-arm64'">aarch64-apple-darwin</_VelloRustTarget>
+      <_VelloRustTarget Condition="'$(VelloRuntimeIdentifier)' == 'linux-x64'">x86_64-unknown-linux-gnu</_VelloRustTarget>
+      <_VelloRustTarget Condition="'$(VelloRuntimeIdentifier)' == 'linux-arm64'">aarch64-unknown-linux-gnu</_VelloRustTarget>
+
+      <_VelloCargoProfileFlag Condition="'$(Configuration)'=='Debug'"></_VelloCargoProfileFlag>
+      <_VelloCargoProfileFlag Condition="'$(Configuration)'!='Debug'">--release</_VelloCargoProfileFlag>
+      <_VelloCargoProfileDir Condition="'$(Configuration)'=='Debug'">debug</_VelloCargoProfileDir>
+      <_VelloCargoProfileDir Condition="'$(Configuration)'!='Debug'">release</_VelloCargoProfileDir>
+    </PropertyGroup>
+
+    <Exec Command="cargo build -p vello_ffi --target $(_VelloRustTarget) $(_VelloCargoProfileFlag)"
+          WorkingDirectory="$(VelloRepositoryRoot)"
+          Condition="'$(_VelloRustTarget)' != ''" />
+    <Exec Command="cargo build -p vello_ffi $(_VelloCargoProfileFlag)"
+          WorkingDirectory="$(VelloRepositoryRoot)"
+          Condition="'$(_VelloRustTarget)' == ''" />
+
+    <PropertyGroup>
+      <_VelloCargoOutputDir Condition="'$(_VelloRustTarget)' == ''">$([System.IO.Path]::Combine('$(VelloRepositoryRoot)', 'target', '$(_VelloCargoProfileDir)'))</_VelloCargoOutputDir>
+      <_VelloCargoOutputDir Condition="'$(_VelloRustTarget)' != ''">$([System.IO.Path]::Combine('$(VelloRepositoryRoot)', 'target', '$(_VelloRustTarget)', '$(_VelloCargoProfileDir)'))</_VelloCargoOutputDir>
+      <_VelloCargoOutputPath>$([System.IO.Path]::Combine('$(_VelloCargoOutputDir)', '$(_VelloNativeFileName)'))</_VelloCargoOutputPath>
+      <_VelloRuntimeNativeDir>$([System.IO.Path]::Combine('$(OutDir)', 'runtimes', '$(VelloRuntimeIdentifier)', 'native'))</_VelloRuntimeNativeDir>
+    </PropertyGroup>
+
+    <Error Condition="!Exists('$(_VelloCargoOutputPath)')"
+           Text="The native library '$(_VelloNativeFileName)' was not produced at '$(_VelloCargoOutputPath)'. Ensure the Rust toolchain for '$(VelloRuntimeIdentifier)' is installed." />
+
+    <Copy SourceFiles="$(_VelloCargoOutputPath)"
+          DestinationFiles="$(_VelloRuntimeNativeDir)/$(_VelloNativeFileName)"
+          SkipUnchangedFiles="true" />
+
+    <Copy SourceFiles="$(_VelloCargoOutputPath)"
+          DestinationFiles="$(OutDir)$(_VelloNativeFileName)"
+          SkipUnchangedFiles="true" />
+  </Target>
 </Project>

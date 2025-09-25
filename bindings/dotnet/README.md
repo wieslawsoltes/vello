@@ -10,29 +10,29 @@ renderer to .NET applications. The bindings are layered:
 
 ## Building the native library
 
-1. Install the Rust toolchain (Rust 1.86 or newer).
-2. Build the cdylib:
+Install the Rust toolchain (Rust 1.86 or newer) before building the managed projects. The `VelloSharp`
+MSBuild project now drives `cargo build -p vello_ffi` automatically for the active .NET runtime identifier
+and configuration. Running any of the following commands produces the native artifact and copies it to the
+managed output directory under `runtimes/<rid>/native/` (and alongside the binaries for convenience):
 
-   ```bash
-   cargo build -p vello_ffi --release
-   ```
+```bash
+dotnet build bindings/dotnet/VelloSharp/VelloSharp.csproj
+dotnet build bindings/dotnet/samples/AvaloniaVelloDemo/AvaloniaVelloDemo.csproj
+dotnet run --project bindings/dotnet/samples/AvaloniaVelloDemo/AvaloniaVelloDemo.csproj
+```
 
-   The resulting shared library lives under `target/release/`:
+By default the current host target triple is used. To build for an alternate RID, pass `-r <rid>` when
+invoking `dotnet build` or set `RuntimeIdentifier` in your consuming project; make sure the corresponding
+Rust target is installed (`rustup target add <triple>`). The produced files are named:
 
-   | OS      | Artifact name            |
-   | ------- | ------------------------ |
-   | Windows | `vello_ffi.dll`          |
-   | macOS   | `libvello_ffi.dylib`     |
-   | Linux   | `libvello_ffi.so`        |
-
-3. Copy the artifact next to your .NET application so it can be resolved at runtime. A simple option for
-   the sample app is:
-
-   ```bash
-   cp target/release/libvello_ffi.* bindings/dotnet/samples/AvaloniaVelloDemo/bin/Debug/net8.0/
-   ```
-
-   (Adjust the filename for your platform and configuration.)
+| RID        | Triple                       | Artifact                 |
+| ---------- | ---------------------------- | ------------------------ |
+| `win-x64`  | `x86_64-pc-windows-msvc`     | `vello_ffi.dll`          |
+| `win-arm64`| `aarch64-pc-windows-msvc`    | `vello_ffi.dll`          |
+| `osx-x64`  | `x86_64-apple-darwin`        | `libvello_ffi.dylib`     |
+| `osx-arm64`| `aarch64-apple-darwin`       | `libvello_ffi.dylib`     |
+| `linux-x64`| `x86_64-unknown-linux-gnu`   | `libvello_ffi.so`        |
+| `linux-arm64`| `aarch64-unknown-linux-gnu`| `libvello_ffi.so`        |
 
 ## Using `VelloSharp`
 
@@ -116,7 +116,8 @@ cd bindings/dotnet/samples/AvaloniaVelloDemo
 dotnet run
 ```
 
-Ensure that the native `vello_ffi` library is discoverable (see the build instructions above).
+The native `vello_ffi` library is copied next to the managed binaries automatically; no additional setup is
+required as long as the Rust toolchain is installed.
 
 ## SkiaSharp interop
 
